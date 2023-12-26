@@ -1,0 +1,22 @@
+{
+  "name": "padding-oracle-attack",
+  "version": "1.0.0",
+  "description": "分组密码CBC填充提示攻击Node.js演示代码",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/re0marb1e/padding-oracle-attack.git"
+  },
+  "author": "re0marb1e",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/re0marb1e/padding-oracle-attack/issues"
+  },
+  "homepage": "https://github.com/re0marb1e/padding-oracle-attack#readme",
+  "dependencies": {
+    "lodash": "^4.17.21"
+  }
+}
