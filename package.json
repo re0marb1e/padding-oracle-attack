@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/re0marb1e/padding-oracle-attack#readme",
   "dependencies": {
+    "@types/node": "^20.10.5",
     "lodash": "^4.17.21"
   }
 }

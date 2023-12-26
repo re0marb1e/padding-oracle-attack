@@ -2,6 +2,7 @@
  * 填充提示攻击破解CBC模式
  */
 
+// const { skipLine } = require('./lib')
 const { xorBuffer } = require('./lib')
 
 /**
@@ -41,14 +42,13 @@ const getTestIVBuffer = ({ byteSize, tailBuffer, testNum, testPos }) => {
  * 填充提示攻击代码示例
  * 已知初始化向量, 密文, 可利用解密函数
  */
-const paddingOracleAttack = (cipherBlock, ivHex, decrypt) => {
+const paddingOracleAttack = (currentBlockHex, prevBlockHex, decrypt) => {
   let tailBuffer, interBuf
   for (let n = 0; n < 16; n++) {
-    console.log('')
-    console.log('====================')
-    console.log(`破解最后第${n}个字节`)
+    // skipLine(true)
+    // console.log(`破解最后第${n}个字节`)
     const paddingBuf = getPaddingBuf(n + 1)
-    console.log('本轮明文应该填充的字节:', paddingBuf.toString('hex'))
+    // console.log('本轮明文应该填充的字节:', paddingBuf.toString('hex'))
     for (let i = 0; i < 256; i++) {
       // 生成用于撞击的IV
       const testIVBuffer = getTestIVBuffer({
@@ -60,26 +60,24 @@ const paddingOracleAttack = (cipherBlock, ivHex, decrypt) => {
       const ivTestHex = testIVBuffer.toString('hex')
       try {
         // 尝试解密
-        decrypt(cipherBlock, ivTestHex)
+        decrypt(ivTestHex + currentBlockHex)
         const buf = Buffer.from(ivTestHex, 'hex').subarray(16 - n - 1)
-        console.log('解密成功的IV:', ivTestHex, buf)
+        // console.log('解密成功的IV:', ivTestHex, buf)
 
         interBuf = xorBuffer(buf, paddingBuf)
-        console.log('中间值:', interBuf)
+        // console.log('中间值:', interBuf)
 
         const nextPaddingBufLessOneByte = getPaddingBuf(n + 2, true)
-        console.log('nextPaddingBufLessOneByte', nextPaddingBufLessOneByte)
+        // console.log('nextPaddingBufLessOneByte', nextPaddingBufLessOneByte)
         tailBuffer = xorBuffer(interBuf, nextPaddingBufLessOneByte)
-        console.log('下一轮起始IV', tailBuffer)
-        // console.log()
-        // f(53) @ 07 = 01
+        // console.log('下一轮起始IV', tailBuffer)
         break
       } catch (e) {
         // 抛错忽略
       }
     }
   }
-  return xorBuffer(interBuf, Buffer.from(ivHex, 'hex')).toString('hex')
+  return xorBuffer(interBuf, Buffer.from(prevBlockHex, 'hex')).toString('hex')
 }
 
 exports.paddingOracleAttack = paddingOracleAttack
