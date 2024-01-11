@@ -3,7 +3,7 @@
  */
 
 const { createCrypto } = require('./crypto')
-const { paddingOracleAttack } = require('./src/attack')
+const { paddingOracleAttack } = require('../src/attack')
 
 const test = () => {
   const plaintexts = [

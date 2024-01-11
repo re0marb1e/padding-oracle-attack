@@ -3,7 +3,7 @@
  */
 
 const _ = require('lodash')
-const { xorBuffer, trimPadding } = require('./lib')
+const { xorBuffer, trimPadding } = require('./utils')
 
 /**
  * 应该填充的Buffer
@@ -79,8 +79,6 @@ const paddingOracleAttackBlock = (currentBlockHex, prevBlockHex, decrypt) => {
   }
   return xorBuffer(interBuf, Buffer.from(prevBlockHex, 'hex')).toString('hex')
 }
-
-exports.paddingOracleAttackBlock = paddingOracleAttackBlock
 
 const paddingOracleAttack = (encryptedHex, decrypt) => {
   const cipherBlocks = _.map(_.chunk(encryptedHex, '32'), v => _.join(v, ''))
