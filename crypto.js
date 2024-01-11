@@ -13,8 +13,8 @@ const createCrypto = (algorithm) => {
 
   /**
    * 加密
-   * 输入: Hex格式的明文
-   * 输出: Hex格式的初始化向量 + Hex格式的密文
+   * 输入: Hex编码格式的明文
+   * 输出: Hex编码格式的初始化向量 + Hex编码格式的密文
    */
   function encrypt (plaintextHex) {
     const ivBuf = crypto.randomBytes(16)
@@ -26,10 +26,8 @@ const createCrypto = (algorithm) => {
 
   /**
    * 解密
-   * 只进行解密，不返回结果
-   * 解密失败 会 报错
-   * 输入: Hex格式的初始化向量 + Hex格式的密文
-   * 输出: Hex格式的明文
+   * 输入: Hex编码格式的初始化向量 + Hex编码格式的密文
+   * 只进行解密，不返回结果，但是解密失败会给出错误提示
    */
   function decrypt (ciphertextHex) {
     const ivHex = ciphertextHex.substring(0, 32)

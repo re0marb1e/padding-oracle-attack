@@ -2,8 +2,8 @@
  * 填充提示攻击破解CBC模式
  */
 
-// const { skipLine } = require('./lib')
-const { xorBuffer } = require('./lib')
+const _ = require('lodash')
+const { xorBuffer, trimPadding } = require('./lib')
 
 /**
  * 应该填充的Buffer
@@ -42,7 +42,7 @@ const getTestIVBuffer = ({ byteSize, tailBuffer, testNum, testPos }) => {
  * 填充提示攻击代码示例
  * 已知初始化向量, 密文, 可利用解密函数
  */
-const paddingOracleAttack = (currentBlockHex, prevBlockHex, decrypt) => {
+const paddingOracleAttackBlock = (currentBlockHex, prevBlockHex, decrypt) => {
   let tailBuffer, interBuf
   for (let n = 0; n < 16; n++) {
     // skipLine(true)
@@ -78,6 +78,20 @@ const paddingOracleAttack = (currentBlockHex, prevBlockHex, decrypt) => {
     }
   }
   return xorBuffer(interBuf, Buffer.from(prevBlockHex, 'hex')).toString('hex')
+}
+
+exports.paddingOracleAttackBlock = paddingOracleAttackBlock
+
+const paddingOracleAttack = (encryptedHex, decrypt) => {
+  const cipherBlocks = _.map(_.chunk(encryptedHex, '32'), v => _.join(v, ''))
+  let decrypted = ''
+  for (let i = 0; i < cipherBlocks.length - 1; i ++ ){
+    const prevBlock = cipherBlocks[i]
+    const currentBlock = cipherBlocks[i+1]
+    const decipherBlock = paddingOracleAttackBlock(currentBlock, prevBlock, decrypt)
+    decrypted += decipherBlock
+  }
+  return trimPadding(decrypted)
 }
 
 exports.paddingOracleAttack = paddingOracleAttack

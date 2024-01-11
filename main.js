@@ -3,15 +3,14 @@
  */
 
 const _ = require('lodash')
-const { trimPadding } = require('./lib')
 const { createCrypto } = require('./crypto')
-const { paddingOracleAttack } = require('./attack')
+const { paddingOracleAttack } = require('./src/attack')
 
 const test = () => {
   const algorithm = 'aes-128-cbc'
   const { encrypt, decrypt } = createCrypto(algorithm)
 
-  const plaintext = '我决定去苏州工业园区上班'
+  const plaintext = '尔滨中央大街鸽子被游客喂成鸽猪热'
   console.log('明文:', plaintext)
 
   const plaintextHex = Buffer.from(plaintext).toString('hex')
@@ -26,16 +25,9 @@ const test = () => {
   const cipherBlocks = _.map(_.chunk(encryptedHex, '32'), v => _.join(v, ''))
   console.log('密文Hex分组:', cipherBlocks)
 
-  let decrypted = ''
-  for (let i = 0; i < cipherBlocks.length - 1; i ++ ){
-    const prevBlock = cipherBlocks[i]
-    const currentBlock = cipherBlocks[i+1]
-    const decipherBlock = paddingOracleAttack(currentBlock, prevBlock, decrypt)
-    decrypted += decipherBlock
-  }
+  const decryptedHex = paddingOracleAttack(encryptedHex, decrypt)
 
-  console.log(trimPadding(decrypted))
-  console.log(plaintextHex === trimPadding(decrypted))
+  console.log(plaintextHex === decryptedHex)
 }
 
 test()
