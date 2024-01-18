@@ -39,7 +39,6 @@ const createCrypto = (algorithm, options) => {
     let decrypted = decipher.update(leftHex, 'hex', 'hex')
     // eslint-disable-next-line no-unused-vars
     decrypted += decipher.final('hex')
-    return decrypted
   }
 
   return { secretKey, encrypt, decrypt }

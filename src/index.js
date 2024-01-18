@@ -34,11 +34,11 @@ exports.getPaddingBuf = getPaddingBuf
  * { byteSize: 16, tailBuffer: Buffer.from('123456', 'hex'), testNum: 1, testPos: -4 }
  * => <Buffer 00 00 00 00 00 00 00 00 00 00 00 00 01 12 34 56>
  */
-const getTestInitializationVector = ({ byteSize, decipheredBytes, testNum, testPos }) => {
+const getTestInitializationVector = ({ byteSize, baseIV, testNum, testPos }) => {
   const buffer = Buffer.alloc(byteSize)
-  if (decipheredBytes) {
-    const offset = byteSize - Buffer.byteLength(decipheredBytes)
-    buffer.write(decipheredBytes.toString('hex'), offset, Buffer.byteLength(decipheredBytes), 'hex')
+  if (baseIV) {
+    const offset = byteSize - Buffer.byteLength(baseIV)
+    buffer.write(baseIV.toString('hex'), offset, Buffer.byteLength(baseIV), 'hex')
   }
   buffer.writeUInt8(testNum, byteSize + testPos)
   return buffer
@@ -51,7 +51,7 @@ const getTestInitializationVector = ({ byteSize, decipheredBytes, testNum, testP
  * @returns 
  */
 const crackCipherBlock = (cipherBlock, decrypt) => {
-  const blockSize = 16
+  const blockSize = Buffer.byteLength(cipherBlock, 'hex')
   const stacks = []
   if (setting.debug) {
     skipLine(true)
@@ -60,44 +60,7 @@ const crackCipherBlock = (cipherBlock, decrypt) => {
 
   for (let n = 0; n < blockSize; n++) {
     const position = n+1
-    if (position > 1) {
-      for(const stack of stacks) {
-        // 破解最后第position个字节
-        for (let i = 0; i < 256; i++) {
-          // 生成用于撞击的IV
-          const thisTestIV = getTestInitializationVector({
-            byteSize: blockSize,
-            testNum: i,
-            testPos: -position,
-            decipheredBytes: _.last(stack).nextBaseIV
-          })
-          try {
-            // 尝试解密
-            decrypt(thisTestIV.toString('hex') + cipherBlock)
-
-            // 解密正确，代表填充正确
-
-            // 最后position字节均为填充字节
-            const paddingBuf = getPaddingBuf(blockSize, position)
-
-            const intermediateBlock = xorBuffer(thisTestIV, paddingBuf)
-
-            const nextPaddingBufLessOneByte = getPaddingBuf(blockSize, position + 1, true)
-
-            stack.push({
-              thisTestIV,
-              // 下一轮将在这个基础上开始生成测试IV
-              nextBaseIV: xorBuffer(intermediateBlock, nextPaddingBufLessOneByte),
-              // 中间值
-              intermedia: intermediateBlock
-            })
-            break
-          } catch (e) {
-            // 抛错忽略
-          }
-        }
-      }
-    } else {
+    if (position === 1) {
       // 破解最后第position个字节
       for (let i = 0; i < 256; i++) {
         // 生成用于撞击的IV
@@ -137,6 +100,41 @@ const crackCipherBlock = (cipherBlock, decrypt) => {
           // 抛错忽略
         }
       }
+    } else {
+      for(const stack of stacks) {
+        // 破解最后第position个字节
+        for (let i = 0; i < 256; i++) {
+          // 生成用于撞击的IV
+          const thisTestIV = getTestInitializationVector({
+            byteSize: blockSize,
+            testNum: i,
+            testPos: -position,
+            baseIV: _.last(stack).nextBaseIV
+          })
+          try {
+            // 尝试解密
+            decrypt(thisTestIV.toString('hex') + cipherBlock)
+
+            // 解密正确，代表填充正确
+
+            // 计算中间值
+            const intermedia = xorBuffer(thisTestIV, getPaddingBuf(blockSize, position))
+
+            const nextPaddingBufLessOneByte = getPaddingBuf(blockSize, position + 1, true)
+
+            stack.push({
+              thisTestIV,
+              // 下一轮将在这个基础上开始生成测试IV
+              nextBaseIV: xorBuffer(intermedia, nextPaddingBufLessOneByte),
+              // 中间值
+              intermedia
+            })
+            break
+          } catch (e) {
+            // 抛错忽略
+          }
+        }
+      }
     }
   }
 
@@ -144,12 +142,14 @@ const crackCipherBlock = (cipherBlock, decrypt) => {
   const intermedia = _.last(successStack).intermedia
   
   if (setting.debug) {
-    console.log(stacks)
+    console.log(successStack)
     console.log(`破译出的中间值: ${intermedia.toString('hex')}`)
   }
 
   return intermedia
 }
+
+exports.crackCipherBlock = crackCipherBlock
 
 const blockString = (str, blockSize) => {
   return _.map(_.chunk(str, blockSize), v => _.join(v, ''))
@@ -186,10 +186,6 @@ const paddingOracleAttack = (encryptedHex, decrypt) => {
     const prevBlock = cipherBlocks[i]
     const plaintextBlock = xorBuffer(intermediateBlock, Buffer.from(prevBlock, 'hex')).toString('hex')
     decrypted += plaintextBlock
-  }
-  if (setting.debug) {
-    console.log('破译后明文')
-    console.log(blockString(decrypted, 32))
   }
   return trimPadding(decrypted)
 }

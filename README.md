@@ -40,3 +40,30 @@ const decryptedHex = paddingOracleAttack(encryptedHex, decrypt)
 // 结果
 console.log(`Padding Oracle Attack破解后明文与原始明文是否相等: ${plaintextHex === decrypted ? 'yes': 'no'}`)
 ```
+
+## 特殊案例
+
+- 加密算法 `aes-128-cbc`
+- 明文UTF-8
+  `La première qualité du style, c\'est la clarté.`
+- 密钥Hex
+  `cfb5343ecca624a0f227e711ed4054c0`
+- 初始化向量Hex
+  `2f2b01b529e2b15ae8cd49ae7d3e31f0`
+- 加密密文分块Hex
+  `fa4917c4cfc11995df05e8d167de2e0a`
+  `ebbca85e4fa0ebf0e4e126d6d0bf9d72`
+  `5e95a07beff4426ef386dbe642087a88`
+  `1d6c1b7717f3eb6143500d9353491903`
+
+在破解第二个密文Block的时候，即破解C2`ebbca85e4fa0ebf0e4e126d6d0bf9d72`
+
+依次测试不同的C1时发现，有两组C1都能正确解密
+
+- `<Buffer 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 28>` (对应明文9620630766e17de0ff769ca80bbb0202)
+- `<Buffer 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 2b>` (对应明文9620630766e17de0ff769ca80bbb0201)
+
+其中第一组并不是我们期望的情况，会干扰后续的破译
+在不知道明文的情况下，只能针对这两种情况的分支都进行后续破译操作
+
+针对第一种情况下，后续破译到倒数第三个字节的时候，会发现没有一个C1能使得C2成功解密，这时可以舍弃这个分支。

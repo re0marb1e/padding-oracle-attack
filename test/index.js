@@ -3,7 +3,7 @@
  */
 
 const { createCrypto } = require('./crypto')
-const { paddingOracleAttack, blockString, setting } = require('../src/attack')
+const { paddingOracleAttack, blockString, setting } = require('../src')
 
 setting.debug = false
 
@@ -18,7 +18,7 @@ const test = () => {
   ]
   const algorithm = 'aes-128-cbc'
   const { encrypt, decrypt } = createCrypto(algorithm, { iv: '2f2b01b529e2b15ae8cd49ae7d3e31f0', ivEncoding: 'hex'})
-  
+
   for(const plaintext of plaintexts) {
     // UTF-8转HEX
     const plaintextHex = Buffer.from(plaintext).toString('hex')
