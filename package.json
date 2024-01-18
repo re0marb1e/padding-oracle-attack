@@ -19,5 +19,8 @@
   "dependencies": {
     "@types/node": "^20.10.5",
     "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "eslint": "^8.56.0"
   }
 }

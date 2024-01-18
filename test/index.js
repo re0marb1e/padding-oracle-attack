@@ -3,7 +3,9 @@
  */
 
 const { createCrypto } = require('./crypto')
-const { paddingOracleAttack } = require('../src/attack')
+const { paddingOracleAttack, blockString, setting } = require('../src/attack')
+
+setting.debug = false
 
 const test = () => {
   const plaintexts = [
@@ -15,7 +17,7 @@ const test = () => {
     'La première qualité du style, c\'est la clarté.'
   ]
   const algorithm = 'aes-128-cbc'
-  const { encrypt, decrypt } = createCrypto(algorithm)
+  const { encrypt, decrypt } = createCrypto(algorithm, { iv: '2f2b01b529e2b15ae8cd49ae7d3e31f0', ivEncoding: 'hex'})
   
   for(const plaintext of plaintexts) {
     // UTF-8转HEX
@@ -24,8 +26,15 @@ const test = () => {
     const encryptedHex = encrypt(plaintextHex)
     // Padding Oracle Attack解密
     const decrypted = paddingOracleAttack(encryptedHex, decrypt)
+    // 判定
+    const checkRs = plaintextHex === decrypted ? 'yes': 'no'
     // 结果
-    console.log(`Padding Oracle Attack破解后明文与原始明文是否相等: ${plaintextHex === decrypted ? 'yes': 'no'}`)
+    console.log(`Padding Oracle Attack破解后明文与原始明文是否相等: ${checkRs}`)
+
+    if (checkRs === 'no') {
+      console.log('明文')
+      console.log(blockString(plaintextHex, 32))
+    }
   }
 }
 

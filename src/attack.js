@@ -3,19 +3,25 @@
  */
 
 const _ = require('lodash')
-const { xorBuffer, trimPadding } = require('./utils')
+const { xorBuffer, trimPadding, skipLine } = require('./utils')
+
+const setting = { debug: false }
+
+exports.setting = setting
 
 /**
  * 应该填充的Buffer
  */
-const getPaddingBuf = (n, lessOneByte = false) => {
+const getPaddingBuf = (byteSize, n, lessOneByte = false) => {
   const loop = lessOneByte & n > 0 ? n - 1 : n
-  const buffer = Buffer.alloc(loop)
+  const buffer = Buffer.alloc(byteSize)
   for (let i = 0; i < loop; i++) {
-    buffer.writeUInt8(n, i)
+    buffer.writeUInt8(n, byteSize - i - 1)
   }
   return buffer
 }
+
+exports.getPaddingBuf = getPaddingBuf
 
 /**
  * 填充提示攻击的IV生成器
@@ -28,66 +34,162 @@ const getPaddingBuf = (n, lessOneByte = false) => {
  * { byteSize: 16, tailBuffer: Buffer.from('123456', 'hex'), testNum: 1, testPos: -4 }
  * => <Buffer 00 00 00 00 00 00 00 00 00 00 00 00 01 12 34 56>
  */
-const getTestIVBuffer = ({ byteSize, tailBuffer, testNum, testPos }) => {
+const getTestInitializationVector = ({ byteSize, decipheredBytes, testNum, testPos }) => {
   const buffer = Buffer.alloc(byteSize)
-  if (tailBuffer) {
-    const offset = byteSize - Buffer.byteLength(tailBuffer)
-    buffer.write(tailBuffer.toString('hex'), offset, Buffer.byteLength(tailBuffer), 'hex')
+  if (decipheredBytes) {
+    const offset = byteSize - Buffer.byteLength(decipheredBytes)
+    buffer.write(decipheredBytes.toString('hex'), offset, Buffer.byteLength(decipheredBytes), 'hex')
   }
   buffer.writeUInt8(testNum, byteSize + testPos)
   return buffer
 }
 
 /**
- * 填充提示攻击代码示例
- * 已知初始化向量, 密文, 可利用解密函数
+ * 破译出中间值
+ * @param {string} currentBlockHex 
+ * @param {Function} decrypt 
+ * @returns 
  */
-const paddingOracleAttackBlock = (currentBlockHex, prevBlockHex, decrypt) => {
-  let tailBuffer, interBuf
-  for (let n = 0; n < 16; n++) {
-    // skipLine(true)
-    // console.log(`破解最后第${n}个字节`)
-    const paddingBuf = getPaddingBuf(n + 1)
-    // console.log('本轮明文应该填充的字节:', paddingBuf.toString('hex'))
-    for (let i = 0; i < 256; i++) {
-      // 生成用于撞击的IV
-      const testIVBuffer = getTestIVBuffer({
-        byteSize: 16,
-        tailBuffer,
-        testNum: i,
-        testPos: -n - 1
-      })
-      const ivTestHex = testIVBuffer.toString('hex')
-      try {
-        // 尝试解密
-        decrypt(ivTestHex + currentBlockHex)
-        const buf = Buffer.from(ivTestHex, 'hex').subarray(16 - n - 1)
-        // console.log('解密成功的IV:', ivTestHex, buf)
+const crackCipherBlock = (cipherBlock, decrypt) => {
+  const blockSize = 16
+  const stacks = []
+  if (setting.debug) {
+    skipLine(true)
+    console.log(`开始破译${cipherBlock}的中间值`)
+  }
 
-        interBuf = xorBuffer(buf, paddingBuf)
-        // console.log('中间值:', interBuf)
+  for (let n = 0; n < blockSize; n++) {
+    const position = n+1
+    if (position > 1) {
+      for(const stack of stacks) {
+        // 破解最后第position个字节
+        for (let i = 0; i < 256; i++) {
+          // 生成用于撞击的IV
+          const thisTestIV = getTestInitializationVector({
+            byteSize: blockSize,
+            testNum: i,
+            testPos: -position,
+            decipheredBytes: _.last(stack).nextBaseIV
+          })
+          try {
+            // 尝试解密
+            decrypt(thisTestIV.toString('hex') + cipherBlock)
 
-        const nextPaddingBufLessOneByte = getPaddingBuf(n + 2, true)
-        // console.log('nextPaddingBufLessOneByte', nextPaddingBufLessOneByte)
-        tailBuffer = xorBuffer(interBuf, nextPaddingBufLessOneByte)
-        // console.log('下一轮起始IV', tailBuffer)
-        break
-      } catch (e) {
-        // 抛错忽略
+            // 解密正确，代表填充正确
+
+            // 最后position字节均为填充字节
+            const paddingBuf = getPaddingBuf(blockSize, position)
+
+            const intermediateBlock = xorBuffer(thisTestIV, paddingBuf)
+
+            const nextPaddingBufLessOneByte = getPaddingBuf(blockSize, position + 1, true)
+
+            stack.push({
+              thisTestIV,
+              // 下一轮将在这个基础上开始生成测试IV
+              nextBaseIV: xorBuffer(intermediateBlock, nextPaddingBufLessOneByte),
+              // 中间值
+              intermedia: intermediateBlock
+            })
+            break
+          } catch (e) {
+            // 抛错忽略
+          }
+        }
+      }
+    } else {
+      // 破解最后第position个字节
+      for (let i = 0; i < 256; i++) {
+        // 生成用于撞击的IV
+        const thisTestIV = getTestInitializationVector({
+          byteSize: blockSize,
+          testNum: i,
+          testPos: -position
+        })
+        try {
+          // 尝试解密
+          decrypt(thisTestIV.toString('hex') + cipherBlock)
+
+          // 解密正确，代表填充正确
+
+          // 第一轮
+          // 能够解密正确的InitializationVector并不一定只有一个
+          // 可能不同的两个初始化向量
+          // 000000000000000000000000000000AB
+          // 一个解密出 XXXXXXXXXXXXXXXXXXXXXXXXXXXX0202
+          // 一个解密出 XXXXXXXXXXXXXXXXXXXXXXXXXXXX0201
+
+          // 最后position字节均为填充字节
+          const paddingBuf = getPaddingBuf(blockSize, position)
+
+          const intermediateBlock = xorBuffer(thisTestIV, paddingBuf)
+
+          const nextPaddingBufLessOneByte = getPaddingBuf(blockSize, position + 1, true)
+
+          stacks.push([{
+            thisTestIV,
+            // 下一轮将在这个基础上开始生成测试IV
+            nextBaseIV: xorBuffer(intermediateBlock, nextPaddingBufLessOneByte),
+            // 中间值
+            intermedia: intermediateBlock
+          }])
+        } catch (e) {
+          // 抛错忽略
+        }
       }
     }
   }
-  return xorBuffer(interBuf, Buffer.from(prevBlockHex, 'hex')).toString('hex')
+
+  const successStack = _.find(stacks, stack => stack.length === blockSize)
+  const intermedia = _.last(successStack).intermedia
+  
+  if (setting.debug) {
+    console.log(stacks)
+    console.log(`破译出的中间值: ${intermedia.toString('hex')}`)
+  }
+
+  return intermedia
 }
 
+const blockString = (str, blockSize) => {
+  return _.map(_.chunk(str, blockSize), v => _.join(v, ''))
+}
+
+exports.blockString = blockString
+
+/**
+ * 破译密文
+ *
+ * @param {string} encryptedHex Hex编码格式的初始化向量 + Hex编码格式的密文
+ * @param {Function} decrypt 解密函数
+ * @returns
+ */
 const paddingOracleAttack = (encryptedHex, decrypt) => {
-  const cipherBlocks = _.map(_.chunk(encryptedHex, '32'), v => _.join(v, ''))
+  // 将密文分组，其中第一组为IV，剩余组为密文
+  const blockSize = 16 // TODO: 不应该写死
+  const cipherBlocks = blockString(encryptedHex, blockSize * 2)
+  if (setting.debug) {
+    console.log('初始化向量')
+    console.log(cipherBlocks[0])
+    console.log('密文分组')
+    console.log(_.drop(cipherBlocks, 1))
+  }
+
+  // 依次破译第2组开始的密文
   let decrypted = ''
   for (let i = 0; i < cipherBlocks.length - 1; i ++ ){
-    const prevBlock = cipherBlocks[i]
+    // 破译出中间值
     const currentBlock = cipherBlocks[i+1]
-    const decipherBlock = paddingOracleAttackBlock(currentBlock, prevBlock, decrypt)
-    decrypted += decipherBlock
+    const intermediateBlock = crackCipherBlock(currentBlock, decrypt)
+    
+    // 中间值与上一个Block异或，结果即为明文Block
+    const prevBlock = cipherBlocks[i]
+    const plaintextBlock = xorBuffer(intermediateBlock, Buffer.from(prevBlock, 'hex')).toString('hex')
+    decrypted += plaintextBlock
+  }
+  if (setting.debug) {
+    console.log('破译后明文')
+    console.log(blockString(decrypted, 32))
   }
   return trimPadding(decrypted)
 }
