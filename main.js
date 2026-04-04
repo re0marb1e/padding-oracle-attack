@@ -1,2 +1,2 @@
-const { paddingOracleAttack } = require('./src/attack')
+const { paddingOracleAttack } = require('./src')
 exports.paddingOracleAttack = paddingOracleAttack
