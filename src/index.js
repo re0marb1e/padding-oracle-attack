@@ -139,6 +139,9 @@ const crackCipherBlock = (cipherBlock, decrypt) => {
   }
 
   const successStack = _.find(stacks, stack => stack.length === blockSize)
+  if (!successStack) {
+    throw new Error(`crackCipherBlock: no valid oracle path found for block ${cipherBlock}`)
+  }
   const intermedia = _.last(successStack).intermedia
   
   if (setting.debug) {
