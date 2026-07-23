@@ -5,7 +5,9 @@
   "main": "main.js",
   "scripts": {
     "test": "node ./test/index.js",
-    "prepare": "husky"
+    "prepare": "husky",
+    "lint:md": "markdownlint-cli2",
+    "lint:md:fix": "markdownlint-cli2 --fix"
   },
   "repository": {
     "type": "git",
@@ -28,5 +30,10 @@
     "husky": "^9.0.0",
     "lint-staged": "^17.0.0",
     "markdownlint-cli2": "^0.23.0"
+  },
+  "lint-staged": {
+    "*.md": [
+      "markdownlint-cli2 --fix"
+    ]
   }
 }
