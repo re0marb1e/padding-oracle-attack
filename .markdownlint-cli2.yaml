@@ -1,0 +1,12 @@
+# markdownlint-cli2 配置：规则取自 .markdownlint.json
+config:
+  extends: ".markdownlint.json"
+
+# 需要检查的文件
+globs:
+  - "**/*.md"
+
+# 忽略的路径
+ignores:
+  - node_modules/**
+  - LICENSE
