@@ -1,0 +1,8 @@
+# 依赖与构建产物
+node_modules
+
+# 生成物 / 锁文件
+pnpm-lock.yaml
+
+# Markdown 由 markdownlint-cli2 检查（pnpm lint:md），不交给 Prettier 重排
+**/*.md

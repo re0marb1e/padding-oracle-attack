@@ -7,7 +7,8 @@
     "test": "node ./test/index.js",
     "prepare": "husky",
     "lint:md": "markdownlint-cli2",
-    "lint:md:fix": "markdownlint-cli2 --fix"
+    "lint:md:fix": "markdownlint-cli2 --fix",
+    "format": "prettier . --write"
   },
   "repository": {
     "type": "git",
@@ -24,12 +25,13 @@
     "lodash": "^4.17.21"
   },
   "devDependencies": {
-    "eslint": "^8.56.0",
     "@commitlint/cli": "^21.0.0",
     "@commitlint/config-conventional": "^21.0.0",
+    "eslint": "^8.56.0",
     "husky": "^9.0.0",
     "lint-staged": "^17.0.0",
-    "markdownlint-cli2": "^0.23.0"
+    "markdownlint-cli2": "^0.23.0",
+    "prettier": "3.4.2"
   },
   "lint-staged": {
     "*.md": [
