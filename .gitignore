@@ -221,3 +221,6 @@ $RECYCLE.BIN/
 # 本地暂存：AI 长指令、Review 草稿等，用完即弃（默认 scratch.md；具名用 scratch.*.md）
 scratch.md
 scratch.*.md
+
+# Claude Code 个人本地配置（共享配置走 .claude/settings.json）
+.claude/settings.local.json
