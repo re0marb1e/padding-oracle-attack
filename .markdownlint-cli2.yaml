@@ -8,5 +8,5 @@ globs:
 
 # 忽略的路径
 ignores:
-  - node_modules/**
-  - LICENSE
+  - "**/node_modules/**"
+  - "LICENSE"

@@ -34,8 +34,6 @@
     "prettier": "3.4.2"
   },
   "lint-staged": {
-    "*.md": [
-      "markdownlint-cli2 --fix"
-    ]
+    "*.md": "markdownlint-cli2 --no-globs"
   }
 }
