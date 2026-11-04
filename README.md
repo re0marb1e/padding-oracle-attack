@@ -12,6 +12,13 @@ npm install
 npm test
 ```
 
+## 结构
+
+```text
+src/     # TypeScript 源码
+test/    # Vitest
+```
+
 ## 用法
 
 ```ts

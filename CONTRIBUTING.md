@@ -1,23 +1,26 @@
 # 贡献
 
-## 目录
+## 环境
 
-```text
-src/     # TypeScript 源码
-test/    # vitest
+- Node.js ≥ 22
+- npm
+
+## 本地开发
+
+```bash
+npm install
+npm test
 ```
 
-## 常用命令
+`npm run dev` 用 tsx watch 跑 `src/index.ts`。
 
-| 命令 | 作用 |
-| --- | --- |
-| `npm install` | 首次安装（并装 git hooks） |
-| `npm run lint` | biome 检查 |
-| `npm run lint:fix` | biome 自动修复 |
-| `npm run typecheck` | 类型检查 |
-| `npm test` | vitest |
+## 提交前
 
-提交前跑 `npm test && npm run lint && npm run typecheck`。
+```bash
+npm run lint
+npm run typecheck
+npm test
+```
 
 ## 提交说明
 
