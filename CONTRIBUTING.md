@@ -21,15 +21,16 @@ test/    # vitest
 
 ## 提交说明
 
-提交须符合 [Conventional Commits](https://www.conventionalcommits.org/)，`commit-msg` 钩子会校验。
+每次提交：`git status` 看清范围，按文件名 `git add`（不用 `git add -A`）。
 
 ```text
-<type>[optional scope]: <description>
+<type>: <一句话主旨>
+
+<2-5 行说明：做了什么、为什么、有什么副作用>
 ```
 
-`type` 用 `feat`、`fix`、`docs`、`chore` 等 conventional 类型。`description` 英文、小写开头、句末不加 `.`；首行不超过 100 字符。
+`type` 用 `feat`、`fix`、`docs`、`chore`、`refactor`、`perf`、`test`。一次提交一个 type、一个主题。说明用中文。
 
-```text
-docs: add cbc padding notes
-fix(oracle): drop invalid first-round branch
-```
+破坏性变更在 `type` 后加 `!`（如 `feat!: 下线 v1 接口`），正文加 `BREAKING CHANGE: <影响与迁移方式>`。
+
+`commit-msg` 钩子跑 commitlint（`@commitlint/config-conventional`）：首行不超过 100 字符，说明句末不加 `.`。
