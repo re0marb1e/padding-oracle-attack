@@ -1,0 +1,11 @@
+# 依赖与构建产物
+node_modules
+dist
+coverage
+
+# Markdown 由 markdownlint-cli2 检查，不交给 Prettier 重排
+**/*.md
+
+# dotenvx 加密密文不进 prettier
+.env
+.env.*

@@ -26,7 +26,7 @@ padding-oracle-attack/
 | `npm start` | 跑编译产物（需先 build） |
 | `npm test` / `npm test -- <name>` | vitest 全量 / 按名过滤 |
 | `npm run typecheck` | tsc --noEmit |
-| `npm run lint` / `lint:fix` | biome |
+| `npm run lint` / `lint:fix` | ESLint + Prettier |
 | `npm run lint:md` | markdownlint |
 
 ## Architecture
@@ -65,6 +65,6 @@ padding-oracle-attack/
 
 ## Gotchas
 
-- **提交规范**：conventional commits；commit-msg 用 commitlint，pre-commit 经 lint-staged 对 `*.{ts,tsx,js,jsx,json}` 跑 biome、对 `*.md` 跑 markdownlint-cli2。
+- **提交规范**：conventional commits；commit-msg 用 commitlint，pre-commit 经 lint-staged 对 `*.{ts,tsx}` 跑 ESLint + Prettier、对 `*.{js,jsx,json}` 跑 Prettier、对 `*.md` 跑 markdownlint-cli2。
 - **无 lockfile**：`.npmrc` 设 `package-lock=false`，装依赖用 `npm install`（不是 `npm ci`）。
 - **构建产物**：`dist/` 被 git 忽略；`npm start` 前需先 `npm run build`。
