@@ -53,10 +53,10 @@
   },
   "lint-staged": {
     "*.{ts,tsx}": [
-      "eslint --fix",
-      "prettier --write"
+      "eslint",
+      "prettier --check"
     ],
-    "*.{js,jsx,json}": "prettier --write",
+    "*.{js,jsx,json}": "prettier --check",
     "*.md": "markdownlint-cli2 --no-globs"
   }
 }
