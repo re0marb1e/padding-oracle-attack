@@ -228,3 +228,6 @@ scratch.*.md
 
 # Agent / 脚本临时落盘
 .tmp/
+
+# 截图落盘（agent、Playwright、puppeteer 自选的目录；证据贴在 PR 里，不入库）
+.shots/
