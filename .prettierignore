@@ -2,6 +2,7 @@
 node_modules
 dist
 coverage
+package-lock.json
 
 # Markdown 由 markdownlint-cli2 检查，不交给 Prettier 重排
 **/*.md

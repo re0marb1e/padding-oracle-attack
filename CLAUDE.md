@@ -66,5 +66,5 @@ padding-oracle-attack/
 ## Gotchas
 
 - **提交规范**：conventional commits；commit-msg 用 commitlint，pre-commit 经 lint-staged 对 `*.{ts,tsx}` 跑 ESLint + Prettier、对 `*.{js,jsx,json}` 跑 Prettier、对 `*.md` 跑 markdownlint-cli2。
-- **无 lockfile**：`.npmrc` 设 `package-lock=false`，装依赖用 `npm install`（不是 `npm ci`）。
+- **提交 lockfile**：`package-lock.json` 入库，按 lock 装依赖用 `npm ci`；增删改依赖后把 lock 一起提交。`.npmrc` 设 `legacy-peer-deps=true`（npm 10 解析 vitest 4 的 optional peer 会崩溃）。
 - **构建产物**：`dist/` 被 git 忽略；`npm start` 前需先 `npm run build`。
