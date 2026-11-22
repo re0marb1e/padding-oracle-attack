@@ -217,9 +217,15 @@ $RECYCLE.BIN/
 
 # End of https://www.toptal.com/developers/gitignore/api/macos,windows,linux,node
 
-### 通用本地忽略 ###
+### 通用忽略 ###
 
-# 对话 / 评审临时稿（默认 scratch.md；具名 scratch.*.md）
+# Vite 缓存
+.vite
+
+# Vitest 注入文件
+.vitest-injected-env.json
+
+# 对话 / 评审临时稿
 scratch.md
 scratch.*.md
 
@@ -230,8 +236,12 @@ scratch.*.md
 .tmp/
 .shots/
 .playwright-mcp/
-
-# 本机设计稿
 .design/
 
-### 项目本地忽略 ###
+# 私钥与本机覆盖不提交
+.env
+.env.keys
+.env.local
+.env.*.local
+
+### 项目忽略 ###
