@@ -223,11 +223,15 @@ $RECYCLE.BIN/
 scratch.md
 scratch.*.md
 
-# Claude Code 个人本地配置（共享配置走 .claude/settings.json）
+# Claude Code 个人本地配置
 .claude/settings.local.json
 
-# Agent / 脚本临时落盘
+# Agent 临时落盘
 .tmp/
-
-# 截图落盘（agent、Playwright、puppeteer 自选的目录；证据贴在 PR 里，不入库）
 .shots/
+.playwright-mcp/
+
+# 本机设计稿
+.design/
+
+### 项目本地忽略 ###
